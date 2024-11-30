@@ -46,10 +46,21 @@ public class PreparedStatementHandler extends BaseStatementHandler {
   public int update(Statement statement) throws SQLException {
     PreparedStatement ps = (PreparedStatement) statement;
     ps.execute();
-    int rows = ps.getUpdateCount();
+    //int rows = ps.getUpdateCount();
     Object parameterObject = boundSql.getParameterObject();
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);
+    while(true) {
+      if (!result) {
+        int updateCount = ps.getUpdateCount();
+        rows += updateCount;
+        if (updateCount == -1) {
+          // no more results
+          break;
+        }
+      }
+      result = ps.getMoreResults();
+    }
     return rows;
   }
 
